@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prognostika.ai — Demo</title>
+<style>
+  body{margin:0;background:#fafafa;color:#0a0a0a;font:14px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
+  .wrap{max-width:980px;margin:0 auto;padding:18px}
+  .card{background:#fff;border:1px solid #eaeaea;border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.06)}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .head{padding:14px 16px;border-bottom:1px solid #eaeaea;display:flex;justify-content:space-between;align-items:center}
+  .title{font-weight:700}
+  .sub{font-size:12px;color:#666}
+  .body{padding:16px;display:grid;gap:14px}
+  @media (min-width:900px){ .body{grid-template-columns:1fr 1fr} }
+  .sec{padding:14px;border:1px dashed #eee;border-radius:12px}
+  .sec h4{margin:0 0 8px 0;font-size:14px;font-weight:700}
+  label.lbl{display:block;font-size:12px;color:#333;margin-bottom:6px}
+  input.txt,select.sel,input.em{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;outline:none}
+  input.txt:focus,select.sel:focus,input.em:focus{border-color:#111;box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+  .badge{font-size:11px;background:#f5f5f5;border:1px solid #eee;border-radius:999px;padding:4px 8px;color:#444}
+  .btn{appearance:none;border:none;background:#111;color:#fff;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .btn.ghost{background:#fff;color:#111;border:1px solid #ddd}
+  .mini{border:1px solid #eee;background:#fcfcfc;border-radius:12px;padding:10px;font-size:12px}
+  .note{font-size:12px;background:#fafafa;border:1px solid #eee;border-radius:10px;padding:8px 10px}
+  .alert{background:#fff7ed;border:1px solid #ffedd5;color:#7c2d12;padding:8px 10px;border-radius:10px;font-size:12px}
+  .ok{background:#ecfdf5;border:1px solid #d1fae5;color:#065f46;padding:8px 10px;border-radius:10px;font-size:12px}
+  .hr{height:1px;background:#eee;margin:10px 0}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:#f6f6f6;border:1px solid #eee;border-radius:999px;padding:6px 10px}
+  .spark{height:96px;background:linear-gradient(180deg,#fafafa,#fff);border:1px solid #eee;border-radius:8px;position:relative;overflow:hidden}
+  .spark::after{content:'';position:absolute;left:-40%;top:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(0,0,0,.04),transparent);animation:sh 1.6s infinite}
+  @keyframes sh{0%{left:-40%}100%{left:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="head">
+      <div>
+        <div class="title">Prognostika.ai — forecasting (demo)</div>
+        <div class="sub">Mathematical model trained on retrospective data. Demo only. No private features.</div>
+      </div>
+      <div>
+        <label class="lbl">Role (demo)</label>
+        <select id="role" class="sel">
+          <option value="guest">Guest</option>
+          <option value="subscriber">Subscriber</option>
+          <option value="prophet">Prophet</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="sec">
+        <h4>1) Choose a stock / ticker</h4>
+        <label class="lbl">Start typing</label>
+        <input id="inpTicker" class="txt" placeholder="AAPL, MSFT, BAS…" autocomplete="off">
+        <div id="suggest" class="mini" style="display:none;margin-top:8px"></div>
+        <div id="cardTicker" class="mini" style="display:none;margin-top:8px"></div>
+        <div id="errTicker" class="alert" style="display:none;margin-top:8px">Please select a ticker from the list.</div>
+      </div>
+
+      <div class="sec">
+        <h4>2) Choose analysis type</h4>
+        <select id="analysis" class="sel">
+          <option value="retro">Retrospective analysis</option>
+          <option value="news">News-based analysis</option>
+          <option value="financials">Financials-based forecast</option>
+          <option value="ai" disabled>AI blended model (pro)</option>
+        </select>
+        <div class="sub" style="margin-top:6px">Blended AI disabled in demo.</div>
+      </div>
+
+      <div class="sec">
+        <h4>3) Result settings</h4>
+        <div class="pill">Graph + summary: always</div>
+        <div class="note" style="margin-top:8px">Full forecast (3 horizons) is available in the private version.</div>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;gap:10px;flex-wrap:wrap">
+      <div class="row">
+        <button class="btn" id="btnRun" disabled>Run forecast</button>
+        <button class="btn ghost" id="btnClear">Clear</button>
+      </div>
+      <div class="row" id="badges"></div>
+    </div>
+  </div>
+
+  <div id="result" class="card" style="margin-top:12px;padding:12px;display:none">
+    <div class="ok"><strong>Prognostika.ai</strong> analysis complete (demo).</div>
+    <div class="hr"></div>
+    <div class="row"><div class="pill">Short-term</div></div>
+    <div class="spark" style="margin-top:8px"></div>
+    <div class="hr"></div>
+    <div class="sub">Short-term preview shown (demo).</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const T=[{symbol:"AAPL",name:"Apple Inc.",exchange:"NASDAQ",price:"US$226.34"},
+           {symbol:"MSFT",name:"Microsoft",exchange:"NASDAQ",price:"US$410.12"},
+           {symbol:"BAS",name:"BASF SE",exchange:"XETRA",price:"€45.18"}];
+  const $=s=>document.querySelector(s), show=(el,v)=>el.style.display=v?'':'none';
+  const S={role:'guest',ticker:null,analysis:'retro'};
+  function render(){ $('#role').value=S.role; $('#analysis').value=S.analysis;
+    $('#badges').innerHTML=`<span class="pill">Role: <b>${S.role}</b></span>`;
+    const ok=!!S.ticker; $('#btnRun').disabled=!ok; }
+  $('#role').addEventListener('change',e=>{S.role=e.target.value;render();});
+  $('#analysis').addEventListener('change',e=>{S.analysis=e.target.value;render();});
+  $('#btnRun').onclick=()=>{ $('#result').style.display=''; };
+  $('#btnClear').onclick=()=>{ S.ticker=null; $('#inpTicker').value=''; show($('#result'),false); show($('#cardTicker'),false); show($('#errTicker'),false); render(); };
+  $('#inpTicker').addEventListener('input',e=>{
+    const q=(e.target.value||'').toUpperCase().trim(); if(!q) return show($('#suggest'),false);
+    const f=T.filter(t=>t.symbol.includes(q)||t.name.toUpperCase().includes(q)).slice(0,6);
+    if(!f.length) return show($('#suggest'),false);
+    $('#suggest').innerHTML=f.map(t=>`<div data-sym="${t.symbol}" style="padding:6px 0;display:flex;justify-content:space-between;cursor:pointer"><div><b>${t.symbol}</b> — ${t.name}</div><div class="badge">${t.exchange}</div></div>`).join('<div class="hr"></div>');
+    show($('#suggest'),true);
+    [...$('#suggest').querySelectorAll('[data-sym]')].forEach(el=>el.onclick=()=>{
+      const sym=el.getAttribute('data-sym'); S.ticker=T.find(x=>x.symbol===sym);
+      $('#inpTicker').value=sym; $('#cardTicker').innerHTML=`<div><b>${S.ticker.symbol}</b> — ${S.ticker.name}</div><div class="row" style="margin-top:6px"><span class="badge">${S.ticker.exchange}</span><span class="badge">Price: ${S.ticker.price}</span></div>`;
+      show($('#cardTicker'),true); show($('#suggest'),false); show($('#errTicker'),false); render();
+    });
+  });
+  render();
+})();
+</script>
+</body>
+</html>
