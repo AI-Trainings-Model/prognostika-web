@@ -1,0 +1,14 @@
+{
+  "status": "ok",
+  "ticker": "AAPL",
+  "analysis_type": "retro",
+  "generated_at": "2025-10-08T20:30:00Z",
+  "short": {
+    "summary": "Uptrend probability ~58% next 5 trading days",
+    "prob_up": 0.58,
+    "confidence": 0.62,
+    "notes": "Demo data"
+  },
+  "mid": { "summary": "mid-term placeholder" },
+  "long": { "summary": "long-term placeholder" }
+}
