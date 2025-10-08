@@ -28,7 +28,31 @@ body{margin:0;background:#fafafa;color:#0a0a0a;font:14px/1.5 Inter,system-ui,Seg
   </div>
 </div>
 <script>
-document.getElementById("r").onclick=()=>{document.getElementById("res").style.display="block";}
+async function loadForecast() {
+  const res = await fetch("./api/forecast.json?ts=" + Date.now());
+  if (!res.ok) throw new Error("Cannot load forecast");
+  return await res.json();
+}
+document.getElementById("r").onclick = async () => {
+  const btn = document.getElementById("r");
+  const resBox = document.getElementById("res");
+  btn.disabled = true; btn.textContent = "Running…";
+  try {
+    const data = await loadForecast();
+    resBox.style.display = "block";
+    resBox.innerHTML = 
+      <b>${data.ticker}</b> — ${data.analysis_type}<br>
+      <div style="margin-top:6px">
+        <b>Short:</b> ${data.short.summary}<br>
+        Prob↑: ${(data.short.prob_up*100).toFixed(1)}%,
+        Confidence: ${(data.short.confidence*100).toFixed(0)}%
+      </div>
+      <div style="font-size:12px;color:#666;margin-top:6px">
+        Updated: ${new Date(data.generated_at).toLocaleString()}
+      </div>;
+  } catch(e){ alert("Demo error: "+e.message); }
+  finally { btn.disabled = false; btn.textContent = "Run forecast"; }
+};
 </script>
 </body>
 </html>
