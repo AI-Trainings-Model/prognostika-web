@@ -1,132 +1,221 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+
+<html lang="ru">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Prognostika.ai — Demo</title>
-<style>
-  body{margin:0;background:#fafafa;color:#0a0a0a;font:14px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
-  .wrap{max-width:980px;margin:0 auto;padding:18px}
-  .card{background:#fff;border:1px solid #eaeaea;border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.06)}
-  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-  .head{padding:14px 16px;border-bottom:1px solid #eaeaea;display:flex;justify-content:space-between;align-items:center}
-  .title{font-weight:700}
-  .sub{font-size:12px;color:#666}
-  .body{padding:16px;display:grid;gap:14px}
-  @media (min-width:900px){ .body{grid-template-columns:1fr 1fr} }
-  .sec{padding:14px;border:1px dashed #eee;border-radius:12px}
-  .sec h4{margin:0 0 8px 0;font-size:14px;font-weight:700}
-  label.lbl{display:block;font-size:12px;color:#333;margin-bottom:6px}
-  input.txt,select.sel,input.em{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;outline:none}
-  input.txt:focus,select.sel:focus,input.em:focus{border-color:#111;box-shadow:0 0 0 3px rgba(0,0,0,.06)}
-  .badge{font-size:11px;background:#f5f5f5;border:1px solid #eee;border-radius:999px;padding:4px 8px;color:#444}
-  .btn{appearance:none;border:none;background:#111;color:#fff;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
-  .btn[disabled]{opacity:.45;cursor:not-allowed}
-  .btn.ghost{background:#fff;color:#111;border:1px solid #ddd}
-  .mini{border:1px solid #eee;background:#fcfcfc;border-radius:12px;padding:10px;font-size:12px}
-  .note{font-size:12px;background:#fafafa;border:1px solid #eee;border-radius:10px;padding:8px 10px}
-  .alert{background:#fff7ed;border:1px solid #ffedd5;color:#7c2d12;padding:8px 10px;border-radius:10px;font-size:12px}
-  .ok{background:#ecfdf5;border:1px solid #d1fae5;color:#065f46;padding:8px 10px;border-radius:10px;font-size:12px}
-  .hr{height:1px;background:#eee;margin:10px 0}
-  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:#f6f6f6;border:1px solid #eee;border-radius:999px;padding:6px 10px}
-  .spark{height:96px;background:linear-gradient(180deg,#fafafa,#fff);border:1px solid #eee;border-radius:8px;position:relative;overflow:hidden}
-  .spark::after{content:'';position:absolute;left:-40%;top:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(0,0,0,.04),transparent);animation:sh 1.6s infinite}
-  @keyframes sh{0%{left:-40%}100%{left:100%}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prognostika.ai — Demo Feed</title>
+  <!-- Tailwind via CDN (для GitHub Pages подходит) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Простой спарклайн без библиотек */
+    .sparkline { width: 100%; height: 40px; }
+    .card { @apply rounded-2xl shadow p-4 bg-white/90 border border-gray-100; }
+    .badge { @apply text-xs px-2 py-0.5 rounded-full border; }
+  </style>
 </head>
-<body>
-<div class="wrap">
-  <div class="card">
-    <div class="head">
-      <div>
-        <div class="title">Prognostika.ai — forecasting (demo)</div>
-        <div class="sub">Mathematical model trained on retrospective data. Demo only. No private features.</div>
-      </div>
-      <div>
-        <label class="lbl">Role (demo)</label>
-        <select id="role" class="sel">
-          <option value="guest">Guest</option>
-          <option value="subscriber">Subscriber</option>
-          <option value="prophet">Prophet</option>
-        </select>
-      </div>
+<body class="bg-gray-50 text-gray-900">
+  <header class="max-w-6xl mx-auto p-4 md:p-6">
+    <div class="flex items-center justify-between gap-4">
+      <h1 class="text-2xl md:text-3xl font-semibold">Prognostika.ai — Публичный демо‑фид</h1>
+      <span id="lastUpdated" class="badge border-gray-300 bg-gray-100">Загрузка…</span>
     </div>
+    <p class="text-sm text-gray-600 mt-2">Данные носят образовательный характер и не являются инвестсоветом.</p>
+  </header> <main class="max-w-6xl mx-auto p-4 md:p-6">
+    <!-- Фильтры -->
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <input id="search" type="search" placeholder="Фильтр по тикеру/компании…" class="border border-gray-300 rounded-xl px-3 py-2 w-full md:w-72" />
+      <select id="sector" class="border border-gray-300 rounded-xl px-3 py-2">
+        <option value="">Все сектора</option>
+      </select>
+      <select id="sort" class="border border-gray-300 rounded-xl px-3 py-2">
+        <option value="fresh">Сначала свежие</option>
+        <option value="change">По изменению %</option>
+        <option value="sentiment">По сентименту</option>
+        <option value="rsi">По RSI (перекуп/перепрод)</option>
+      </select>
+      <button id="refresh" class="ml-auto badge border-gray-300 bg-white hover:bg-gray-100">Обновить</button>
+    </div><!-- Контейнер карточек -->
+<div id="grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
 
-    <div class="body">
-      <div class="sec">
-        <h4>1) Choose a stock / ticker</h4>
-        <label class="lbl">Start typing</label>
-        <input id="inpTicker" class="txt" placeholder="AAPL, MSFT, BAS…" autocomplete="off">
-        <div id="suggest" class="mini" style="display:none;margin-top:8px"></div>
-        <div id="cardTicker" class="mini" style="display:none;margin-top:8px"></div>
-        <div id="errTicker" class="alert" style="display:none;margin-top:8px">Please select a ticker from the list.</div>
-      </div>
-
-      <div class="sec">
-        <h4>2) Choose analysis type</h4>
-        <select id="analysis" class="sel">
-          <option value="retro">Retrospective analysis</option>
-          <option value="news">News-based analysis</option>
-          <option value="financials">Financials-based forecast</option>
-          <option value="ai" disabled>AI blended model (pro)</option>
-        </select>
-        <div class="sub" style="margin-top:6px">Blended AI disabled in demo.</div>
-      </div>
-
-      <div class="sec">
-        <h4>3) Result settings</h4>
-        <div class="pill">Graph + summary: always</div>
-        <div class="note" style="margin-top:8px">Full forecast (3 horizons) is available in the private version.</div>
-      </div>
-    </div>
-
-    <div class="hr"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;gap:10px;flex-wrap:wrap">
-      <div class="row">
-        <button class="btn" id="btnRun" disabled>Run forecast</button>
-        <button class="btn ghost" id="btnClear">Clear</button>
-      </div>
-      <div class="row" id="badges"></div>
-    </div>
-  </div>
-
-  <div id="result" class="card" style="margin-top:12px;padding:12px;display:none">
-    <div class="ok"><strong>Prognostika.ai</strong> analysis complete (demo).</div>
-    <div class="hr"></div>
-    <div class="row"><div class="pill">Short-term</div></div>
-    <div class="spark" style="margin-top:8px"></div>
-    <div class="hr"></div>
-    <div class="sub">Short-term preview shown (demo).</div>
-  </div>
+<!-- Пагинатор (если потребуется) -->
+<div id="pager" class="flex justify-center mt-6 hidden">
+  <button id="moreBtn" class="badge border-gray-300 bg-white hover:bg-gray-100">Показать ещё</button>
 </div>
 
-<script>
-(function(){
-  const T=[{symbol:"AAPL",name:"Apple Inc.",exchange:"NASDAQ",price:"US$226.34"},
-           {symbol:"MSFT",name:"Microsoft",exchange:"NASDAQ",price:"US$410.12"},
-           {symbol:"BAS",name:"BASF SE",exchange:"XETRA",price:"€45.18"}];
-  const $=s=>document.querySelector(s), show=(el,v)=>el.style.display=v?'':'none';
-  const S={role:'guest',ticker:null,analysis:'retro'};
-  function render(){ $('#role').value=S.role; $('#analysis').value=S.analysis;
-    $('#badges').innerHTML=`<span class="pill">Role: <b>${S.role}</b></span>`;
-    const ok=!!S.ticker; $('#btnRun').disabled=!ok; }
-  $('#role').addEventListener('change',e=>{S.role=e.target.value;render();});
-  $('#analysis').addEventListener('change',e=>{S.analysis=e.target.value;render();});
-  $('#btnRun').onclick=()=>{ $('#result').style.display=''; };
-  $('#btnClear').onclick=()=>{ S.ticker=null; $('#inpTicker').value=''; show($('#result'),false); show($('#cardTicker'),false); show($('#errTicker'),false); render(); };
-  $('#inpTicker').addEventListener('input',e=>{
-    const q=(e.target.value||'').toUpperCase().trim(); if(!q) return show($('#suggest'),false);
-    const f=T.filter(t=>t.symbol.includes(q)||t.name.toUpperCase().includes(q)).slice(0,6);
-    if(!f.length) return show($('#suggest'),false);
-    $('#suggest').innerHTML=f.map(t=>`<div data-sym="${t.symbol}" style="padding:6px 0;display:flex;justify-content:space-between;cursor:pointer"><div><b>${t.symbol}</b> — ${t.name}</div><div class="badge">${t.exchange}</div></div>`).join('<div class="hr"></div>');
-    show($('#suggest'),true);
-    [...$('#suggest').querySelectorAll('[data-sym]')].forEach(el=>el.onclick=()=>{
-      const sym=el.getAttribute('data-sym'); S.ticker=T.find(x=>x.symbol===sym);
-      $('#inpTicker').value=sym; $('#cardTicker').innerHTML=`<div><b>${S.ticker.symbol}</b> — ${S.ticker.name}</div><div class="row" style="margin-top:6px"><span class="badge">${S.ticker.exchange}</span><span class="badge">Price: ${S.ticker.price}</span></div>`;
-      show($('#cardTicker'),true); show($('#suggest'),false); show($('#errTicker'),false); render();
-    });
-  });
-  render();
-})();
-</script>
-</body>
+  </main> <footer class="max-w-6xl mx-auto p-6 text-xs text-gray-500">
+    <p>Источник: <code>/data/feed.json</code>. При недоступности файла отображается демо‑набор.</p>
+  </footer> <script>
+    // ======= Конфиг =======
+    const FEED_URL = 'data/feed.json'; // структура ниже в комментарии
+    const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 минут
+
+    // ======= Fallback демо‑данные (если feed.json не найден) =======
+    const demoFeed = {
+      updated_at: new Date().toISOString(),
+      summary: { total: 8 },
+      items: [
+        { ticker: 'KTOS', name: 'Kratos Defense & Security', sector: 'Aerospace & Defense', price: 24.12, change_pct: 1.8, rsi14: 58, sentiment: 0.21, last_news: { title: 'Wins tactical drone contract', date: isoDaysAgo(0) }, horizon: '1D', spark: sparkMock(24.12) },
+        { ticker: 'AVAV', name: 'AeroVironment', sector: 'Aerospace & Defense', price: 183.40, change_pct: -0.9, rsi14: 47, sentiment: 0.05, last_news: { title: 'New loitering munitions batch', date: isoDaysAgo(1) }, horizon: '1D', spark: sparkMock(183.40) },
+        { ticker: 'SMCI', name: 'Super Micro Computer', sector: 'AI Servers', price: 889.20, change_pct: 2.7, rsi14: 62, sentiment: 0.34, last_news: { title: 'AI racks pre‑orders surge', date: isoDaysAgo(0) }, horizon: '1D', spark: sparkMock(889.2) },
+        { ticker: 'PLTR', name: 'Palantir Technologies', sector: 'AI / Software', price: 42.75, change_pct: 0.6, rsi14: 55, sentiment: 0.40, last_news: { title: 'NATO pilot expands', date: isoDaysAgo(2) }, horizon: '1D', spark: sparkMock(42.75) },
+        { ticker: 'RCAT', name: 'Red Cat Holdings', sector: 'Drones', price: 0.87, change_pct: -1.2, rsi14: 44, sentiment: -0.05, last_news: { title: 'Latin America export discussed', date: isoDaysAgo(3) }, horizon: '1D', spark: sparkMock(0.87) },
+        { ticker: 'BA', name: 'Boeing', sector: 'Aerospace & Defense', price: 164.30, change_pct: 0.3, rsi14: 49, sentiment: -0.12, last_news: { title: 'Delivery schedule update', date: isoDaysAgo(1) }, horizon: '1D', spark: sparkMock(164.3) },
+        { ticker: 'LLY', name: 'Eli Lilly', sector: 'Pharma / Biotech', price: 915.60, change_pct: 0.9, rsi14: 59, sentiment: 0.26, last_news: { title: 'Obesity drug capacity news', date: isoDaysAgo(0) }, horizon: '1D', spark: sparkMock(915.6) },
+        { ticker: 'AAPL', name: 'Apple', sector: 'Consumer Tech', price: 224.10, change_pct: -0.4, rsi14: 51, sentiment: 0.02, last_news: { title: 'Supply chain note', date: isoDaysAgo(2) }, horizon: '1D', spark: sparkMock(224.1) }
+      ]
+    };
+
+    // ======= Состояние =======
+    let state = { full: demoFeed, filtered: [], page: 1, pageSize: 30 };
+
+    // ======= Утилиты =======
+    function isoDaysAgo(n){ const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString(); }
+    function fmtPct(x){ return (x>0?'+':'') + x.toFixed(2) + '%'; }
+    function ago(iso){ const d = new Date(iso); const diff = Date.now()-d.getTime(); const m = Math.round(diff/60000); if(m<60) return m+" мин назад"; const h=Math.round(m/60); if(h<24) return h+" ч назад"; const dd=Math.round(h/24); return dd+" дн назад"; }
+    function badgeColorByChange(p){ if(p>1) return 'bg-green-50 text-green-700 border-green-200'; if(p< -1) return 'bg-red-50 text-red-700 border-red-200'; return 'bg-gray-50 text-gray-700 border-gray-200'; }
+    function badgeColorByRSI(r){ if(r>=70) return 'bg-amber-50 text-amber-700 border-amber-200'; if(r<=30) return 'bg-blue-50 text-blue-700 border-blue-200'; return 'bg-gray-50 text-gray-700 border-gray-200'; }
+    function badgeColorBySent(s){ if(s>0.2) return 'bg-green-50 text-green-700 border-green-200'; if(s<-0.2) return 'bg-red-50 text-red-700 border-red-200'; return 'bg-gray-50 text-gray-700 border-gray-200'; }
+    function sparkMock(base){ // генератор псевдо‑спарклайна
+      const pts = []; let v = base; for(let i=0;i<30;i++){ v += (Math.random()-0.5) * (base*0.01); pts.push(Math.max(0.01, v)); } return pts; }
+
+    function drawSparkline(container, values){
+      const w = container.clientWidth || 280; const h = 40; const min = Math.min(...values), max = Math.max(...values);
+      const dx = w / (values.length-1); const mapY = v => h - ((v-min)/(max-min||1))*h;
+      let d = '';
+      values.forEach((v,i)=>{ const x=i*dx; const y=mapY(v); d += (i? ' L':'M')+x.toFixed(1)+' '+y.toFixed(1); });
+      container.innerHTML = `<svg class="sparkline" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+        <path d="${d}" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+      </svg>`;
+    }
+
+    // ======= Рендер =======
+    function render(){
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      const items = paginate(state.filtered.length ? state.filtered : state.full.items, state.page, state.pageSize);
+
+      items.forEach(it => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-lg font-semibold">${it.ticker}</span>
+                <span class="badge border-gray-300 bg-gray-50">${it.horizon||'1D'}</span>
+              </div>
+              <div class="text-sm text-gray-600">${it.name||''}</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xl font-semibold">$${it.price?.toFixed(2)??'—'}</div>
+              <div class="text-sm ${it.change_pct>=0?'text-green-600':'text-red-600'}">${fmtPct(it.change_pct||0)}</div>
+            </div>
+          </div>
+          <div class="mt-3 text-xs flex items-center gap-2">
+            <span class="badge ${badgeColorByRSI(it.rsi14)}">RSI: ${it.rsi14??'—'}</span>
+            <span class="badge ${badgeColorBySent(it.sentiment)}">Sentiment: ${(it.sentiment??0).toFixed(2)}</span>
+            <span class="badge ${badgeColorByChange(it.change_pct)}">Δ: ${fmtPct(it.change_pct||0)}</span>
+          </div>
+          <div class="mt-3"><div class="spark" aria-hidden="true"></div></div>
+          <div class="mt-3 text-sm">
+            <div class="text-gray-700 line-clamp-2">📰 ${it.last_news?.title || 'Новости не найдены'}</div>
+            <div class="text-xs text-gray-500">${it.last_news?.date ? ago(it.last_news.date) : '—'}</div>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">Сектор: ${it.sector||'—'}</div>
+        `;
+        grid.appendChild(card);
+        // отрисовка спарклайна
+        const sparkHost = card.querySelector('.spark');
+        drawSparkline(sparkHost, (it.spark && it.spark.length ? it.spark : sparkMock(it.price||1)));
+      });
+
+      document.getElementById('lastUpdated').textContent = 'Обновлено: ' + fmtDate(state.full.updated_at);
+    }
+
+    function fmtDate(iso){ try{ const d=new Date(iso); return d.toLocaleString('ru-RU'); }catch{ return '—'; } }
+    function paginate(arr, page, pageSize){ if(!arr) return []; const start=(page-1)*pageSize; return arr.slice(start, start+pageSize); }
+
+    // ======= Фильтрация / сортировка =======
+    function applyFilters(){
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      const sec = document.getElementById('sector').value;
+      const sort = document.getElementById('sort').value;
+
+      let arr = [...state.full.items];
+      if(q) arr = arr.filter(x => (x.ticker||'').toLowerCase().includes(q) || (x.name||'').toLowerCase().includes(q));
+      if(sec) arr = arr.filter(x => x.sector === sec);
+
+      if(sort === 'fresh'){
+        arr.sort((a,b)=> new Date(b.last_news?.date||0) - new Date(a.last_news?.date||0));
+      } else if(sort === 'change'){
+        arr.sort((a,b)=> (Math.abs(b.change_pct||0) - Math.abs(a.change_pct||0)));
+      } else if(sort === 'sentiment'){
+        arr.sort((a,b)=> (b.sentiment||0) - (a.sentiment||0));
+      } else if(sort === 'rsi'){
+        arr.sort((a,b)=> (b.rsi14||0) - (a.rsi14||0));
+      }
+
+      state.filtered = arr;
+      state.page = 1;
+      render();
+      populateSectors();
+    }
+
+    function populateSectors(){
+      const sel = document.getElementById('sector');
+      const opts = new Set((state.filtered.length?state.filtered:state.full.items).map(x=>x.sector).filter(Boolean));
+      const current = sel.value;
+      sel.innerHTML = '<option value="">Все сектора</option>' + Array.from(opts).sort().map(s=>`<option ${s===current?'selected':''} value="${s}">${s}</option>`).join('');
+    }
+
+    // ======= Загрузка фида =======
+    async function loadFeed(){
+      try{
+        const res = await fetch(FEED_URL, { cache: 'no-store' });
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const json = await res.json();
+        if(!json || !Array.isArray(json.items)) throw new Error('bad schema');
+        state.full = json;
+      }catch(e){
+        console.warn('Feed недоступен, используем демо‑данные:', e);
+        state.full = demoFeed;
+      }
+      state.filtered = [];
+      populateSectors();
+      render();
+    }
+
+    // ======= Авто‑обновление =======
+    setInterval(loadFeed, AUTO_REFRESH_MS);
+
+    // ======= Слушатели =======
+    document.getElementById('search').addEventListener('input', applyFilters);
+    document.getElementById('sector').addEventListener('change', applyFilters);
+    document.getElementById('sort').addEventListener('change', applyFilters);
+    document.getElementById('refresh').addEventListener('click', loadFeed);
+
+    // ======= Старт =======
+    loadFeed();
+  </script> <!-- ==========================
+  Пример структуры data/feed.json (положить в /data/feed.json в том же репо)
+  {
+    "updated_at": "2025-10-14T06:59:00+02:00",
+    "summary": { "total": 8 },
+    "items": [
+      {
+        "ticker": "PLTR",
+        "name": "Palantir Technologies",
+        "sector": "AI / Software",
+        "price": 42.75,
+        "change_pct": 0.62,
+        "rsi14": 55,
+        "sentiment": 0.40,
+        "last_news": { "title": "NATO pilot expands", "date": "2025-10-12T16:10:00+02:00" },
+        "horizon": "1D",
+        "spark": [41.7, 42.0, 41.9, 42.1, 42.5, 42.3, 42.75]
+      }
+    ]
+  }
+  =========================== --></body>
 </html>
