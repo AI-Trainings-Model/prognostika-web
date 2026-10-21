@@ -50,6 +50,12 @@ public class MainActivity extends Activity {
         final WebViewAssetLoader loader = new WebViewAssetLoader.Builder().addPathHandler(
             "/assets/", new WebViewAssetLoader.AssetsPathHandler(this)).build();
         web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageFinished(WebView view, String url) {
+                String target = getIntent().getStringExtra("screen");
+                if (target != null && (target.equals("editor") || target.equals("settings"))) {
+                    view.evaluateJavascript("window.weatherGoTo && window.weatherGoTo('"+target+"')", null);
+                }
+            }
             @Override public android.webkit.WebResourceResponse shouldInterceptRequest(
                 WebView view, android.webkit.WebResourceRequest request) {
                 return loader.shouldInterceptRequest(request.getUrl());
