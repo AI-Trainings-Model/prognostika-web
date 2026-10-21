@@ -49,7 +49,7 @@ jobs:
       - name: Install, launch and capture real Android emulator screenshots
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 33
+          api-level: 30
           arch: x86_64
           profile: pixel_6
           disable-animations: true
@@ -62,17 +62,20 @@ jobs:
             adb shell am force-stop com.prognostika.weatherwithyou || true
             adb shell am start -n com.prognostika.weatherwithyou/.MainActivity
             sleep 18
-            adb exec-out screencap -p > screenshots/main.png
+            adb shell screencap -p /data/local/tmp/main.png
+            adb pull /data/local/tmp/main.png screenshots/main.png
             test -s screenshots/main.png
             adb shell am force-stop com.prognostika.weatherwithyou || true
             adb shell am start -n com.prognostika.weatherwithyou/.MainActivity --es screen editor
             sleep 8
-            adb exec-out screencap -p > screenshots/editor.png
+            adb shell screencap -p /data/local/tmp/editor.png
+            adb pull /data/local/tmp/editor.png screenshots/editor.png
             test -s screenshots/editor.png
             adb shell am force-stop com.prognostika.weatherwithyou || true
             adb shell am start -n com.prognostika.weatherwithyou/.MainActivity --es screen settings
             sleep 8
-            adb exec-out screencap -p > screenshots/settings.png
+            adb shell screencap -p /data/local/tmp/settings.png
+            adb pull /data/local/tmp/settings.png screenshots/settings.png
             test -s screenshots/settings.png
             file screenshots/*.png
       - uses: actions/upload-artifact@v4
