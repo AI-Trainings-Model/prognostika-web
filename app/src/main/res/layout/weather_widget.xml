@@ -1,0 +1,17 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root" android:orientation="vertical"
+    android:background="@drawable/widget_bg" android:padding="14dp"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <TextView android:id="@+id/widget_city" android:text="Берлин"
+        android:textSize="14sp" android:textStyle="bold" android:textColor="#FFFFFF"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+    <TextView android:id="@+id/widget_temp" android:text="12°"
+        android:textSize="48sp" android:textColor="#FFFFFF"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+    <TextView android:id="@+id/widget_summary" android:text="Переменная облачность"
+        android:textSize="13sp" android:textColor="#FFFFFF"
+        android:layout_width="match_parent" android:layout_height="wrap_content"/>
+    <TextView android:id="@+id/widget_people" android:text="👩"
+        android:gravity="right|bottom" android:textSize="36sp"
+        android:layout_weight="1" android:layout_width="match_parent" android:layout_height="0dp"/>
+</LinearLayout>

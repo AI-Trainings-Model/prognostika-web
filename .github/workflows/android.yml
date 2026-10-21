@@ -1,0 +1,54 @@
+name: Android APK and emulator visual check
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Build debug APK
+        run: gradle --no-daemon :app:assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: weather-with-you-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 3
+      - name: Install app, capture REAL emulator screenshots
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb shell am start -n com.prognostika.weatherwithyou/.MainActivity
+            sleep 15
+            mkdir -p screenshots
+            adb shell screencap -p /sdcard/screen-main.png
+            adb pull /sdcard/screen-main.png screenshots/main.png
+            adb shell input tap 375 70
+            sleep 2
+            adb shell screencap -p /sdcard/screen-settings.png
+            adb pull /sdcard/screen-settings.png screenshots/settings.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-emulator-screenshots
+          path: screenshots/
+          retention-days: 3
