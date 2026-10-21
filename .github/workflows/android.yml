@@ -65,15 +65,18 @@ jobs:
             adb shell screencap -p /data/local/tmp/main.png
             adb pull /data/local/tmp/main.png screenshots/main.png
             test -s screenshots/main.png
-            adb shell am force-stop com.prognostika.weatherwithyou || true
-            adb shell am start -n com.prognostika.weatherwithyou/.MainActivity --es screen editor
-            sleep 8
+            adb shell input swipe 520 1800 520 770 550
+            sleep 3
+            adb shell screencap -p /data/local/tmp/main-scroll.png
+            adb pull /data/local/tmp/main-scroll.png screenshots/main-scroll.png
+            test -s screenshots/main-scroll.png
+            adb shell input tap 540 2180
+            sleep 5
             adb shell screencap -p /data/local/tmp/editor.png
             adb pull /data/local/tmp/editor.png screenshots/editor.png
             test -s screenshots/editor.png
-            adb shell am force-stop com.prognostika.weatherwithyou || true
-            adb shell am start -n com.prognostika.weatherwithyou/.MainActivity --es screen settings
-            sleep 8
+            adb shell input tap 900 2180
+            sleep 5
             adb shell screencap -p /data/local/tmp/settings.png
             adb pull /data/local/tmp/settings.png screenshots/settings.png
             test -s screenshots/settings.png
