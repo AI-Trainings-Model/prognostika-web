@@ -38,14 +38,22 @@ jobs:
           name: weather-with-you-apk
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 7
+      - name: Enable KVM acceleration for Android Emulator
+        run: |
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            ls -l /dev/kvm
+          else
+            echo "KVM device unavailable; emulator may run in slow software mode."
+          fi
       - name: Install, launch and capture real Android emulator screenshots
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 33
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          emulator-boot-timeout: 900
+          emulator-boot-timeout: 600
           script: |
             set -eu
             adb wait-for-device
