@@ -31,6 +31,18 @@ jobs:
           test -s app/src/main/assets/index.html
           test -s app/src/main/assets/app.js
           test -s app/src/main/assets/style.css
+      - name: Apply modular editor refinements
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('app/src/main/assets/index.html')
+          s=path.read_text(encoding='utf-8')
+          s=s.replace('</head>', '<link rel="stylesheet" href="overrides.css"/></head>')
+          s=s.replace('</body>', '<script src="enhancements.js"></script></body>')
+          path.write_text(s,encoding='utf-8')
+          PY
+          test -s app/src/main/assets/overrides.css
+          test -s app/src/main/assets/enhancements.js
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
       - uses: actions/upload-artifact@v4
