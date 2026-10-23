@@ -44,12 +44,20 @@ jobs:
           path=Path('app/src/main/assets/index.html')
           s=path.read_text(encoding='utf-8')
           s=s.replace('</head>', '<link rel="stylesheet" href="overrides.css"/></head>')
+          s=s.replace('<script src="app.js"></script>', '<script src="locales-data.js"></script><script src="locales-runtime.js"></script><script src="app.js"></script>')
+          app=Path('app/src/main/assets/app.js')
+          source=app.read_text(encoding='utf-8')
+          source=source.replace("'ru-RU'", "(window.WWYLocale?.intlLocale()||'ru-RU')")
+          source=source.replace('count=1&language=ru&format=json', "count=1&language='+(window.WWYLocale?.language()||'en')+'&format=json")
+          app.write_text(source,encoding='utf-8')
           s=s.replace('</body>', '<script src="enhancements.js"></script><script src="render-skin.js"></script></body>')
           s=s.replace('</head>', '<link rel="stylesheet" href="render-skin.css"/></head>')
           path.write_text(s,encoding='utf-8')
           PY
           test -s app/src/main/assets/overrides.css
           test -s app/src/main/assets/enhancements.js
+          test -s app/src/main/assets/locales-data.js
+          test -s app/src/main/assets/locales-runtime.js
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
       - uses: actions/upload-artifact@v4
@@ -99,6 +107,18 @@ jobs:
             adb shell screencap -p /data/local/tmp/settings.png
             adb pull /data/local/tmp/settings.png screenshots/settings.png
             test -s screenshots/settings.png
+            adb shell am force-stop com.prognostika.weatherwithyou || true
+            adb shell am start -n com.prognostika.weatherwithyou/.MainActivity --es screen settings --es localeTest en
+            sleep 8
+            adb shell screencap -p /data/local/tmp/english.png
+            adb pull /data/local/tmp/english.png screenshots/english.png
+            test -s screenshots/english.png
+            adb shell am force-stop com.prognostika.weatherwithyou || true
+            adb shell am start -n com.prognostika.weatherwithyou/.MainActivity --es screen settings --es localeTest de
+            sleep 8
+            adb shell screencap -p /data/local/tmp/german.png
+            adb pull /data/local/tmp/german.png screenshots/german.png
+            test -s screenshots/german.png
             file screenshots/*.png
       - uses: actions/upload-artifact@v4
         if: always()
