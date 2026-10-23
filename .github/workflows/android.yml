@@ -31,6 +31,12 @@ jobs:
           test -s app/src/main/assets/index.html
           test -s app/src/main/assets/app.js
           test -s app/src/main/assets/style.css
+      - name: Install pixel-cropped render artwork
+        run: |
+          mkdir -p app/src/main/assets/render
+          tar -xzf render_assets.tgz -C app/src/main/assets/render
+          test -s app/src/main/assets/render/hero.webp
+          test -s app/src/main/assets/render/hourly.webp
       - name: Apply modular editor refinements
         run: |
           python3 - <<'PY'
@@ -38,7 +44,8 @@ jobs:
           path=Path('app/src/main/assets/index.html')
           s=path.read_text(encoding='utf-8')
           s=s.replace('</head>', '<link rel="stylesheet" href="overrides.css"/></head>')
-          s=s.replace('</body>', '<script src="enhancements.js"></script></body>')
+          s=s.replace('</body>', '<script src="enhancements.js"></script><script src="render-skin.js"></script></body>')
+          s=s.replace('</head>', '<link rel="stylesheet" href="render-skin.css"/></head>')
           path.write_text(s,encoding='utf-8')
           PY
           test -s app/src/main/assets/overrides.css
