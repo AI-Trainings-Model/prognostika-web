@@ -67,14 +67,61 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         return s.length()>0?s.toString():"👤";
     }
 
+    private static String locale(Context c, JSONObject cfg) {
+        String choice=cfg.optString("language","system");
+        String language="system".equals(choice)?java.util.Locale.getDefault().getLanguage():choice;
+        return language.matches("ru|en|de|pl|be")?language:"en";
+    }
+    // Stable internal module IDs and phrase keys, separate from translated UI strings.
+    private static String tr(String lang, String key) {
+        final String[][] terms={
+            {"hourly","Почасовой прогноз","Hourly forecast","Stündliche Vorhersage","Prognoza godzinowa","Пагадзінны прагноз"},
+            {"daily","Прогноз на 7 дней","7-day forecast","7-Tage-Vorhersage","Prognoza na 7 dni","Прагноз на 7 дзён"},
+            {"details","Подробные показатели","Weather details","Wetterdetails","Szczegóły pogody","Падрабязныя паказчыкі"},
+            {"clothes","Что надеть","What to wear","Was anziehen?","Co ubrać","Што апрануць"},
+            {"family","Вся семья","Whole family","Ganze Familie","Cała rodzina","Уся сям’я"},
+            {"warnings","Предупреждения","Advisories","Warnhinweise","Ostrzeżenia","Папярэджанні"},
+            {"radar","Карта осадков","Rain map","Niederschlagskarte","Mapa opadów","Карта ападкаў"},
+            {"hint","Настройте модули","Configure modules","Module einrichten","Skonfiguruj moduły","Наладзьце модулі"},
+            {"openHours","Нажмите, чтобы открыть часы","Tap for hours","Für Stunden tippen","Dotknij, aby zobaczyć godziny","Націсніце, каб адкрыць гадзіны"},
+            {"dailyText","Температура и осадки по дням","Daily temperatures and rain","Temperatur und Regen nach Tagen","Temperatura i opady w dniach","Тэмпература і ападкі па днях"},
+            {"windText","Ветер · влажность · давление","Wind · humidity · pressure","Wind · Feuchte · Luftdruck","Wiatr · wilgotność · ciśnienie","Вецер · вільготнасць · ціск"},
+            {"humidityText"," влажность"," humidity"," Feuchte"," wilgotność"," вільготнасць"},
+            {"walk","Рекомендации для прогулки","Walking recommendations","Empfehlungen für Spaziergänge","Zalecenia na spacer","Парады для прагулкі"},
+            {"changes","Прогноз изменений погоды","Weather changes","Wetteränderungen","Zmiany pogody","Змены надвор’я"},
+            {"radarPlaceholder","Здесь будет радар","Radar coming soon","Radar folgt","Radar wkrótce","Радар хутка"},
+            {"openEditor","Откройте редактор","Open editor","Editor öffnen","Otwórz edytor","Адкрыйце рэдактар"},
+            {"loading","Прогноз загружается","Loading forecast","Vorhersage wird geladen","Ładowanie prognozy","Прагноз загружаецца"},
+            {"clear","Ясно","Clear","Klar","Bezchmurnie","Ясна"},
+            {"partly","Переменная облачность","Partly cloudy","Wechselnd bewölkt","Częściowe zachmurzenie","Пераменная воблачнасць"},
+            {"cloudy","Облачно","Cloudy","Bewölkt","Pochmurno","Воблачна"},
+            {"snow","Снег","Snow","Schnee","Śnieg","Снег"},
+            {"rain","Дождь","Rain","Regen","Deszcz","Дождж"},
+            {"fog","Туман","Fog","Nebel","Mgła","Туман"},
+            {"berlin","Берлин","Berlin","Berlin","Berlin","Берлін"}
+        };
+        int index="ru".equals(lang)?1:"en".equals(lang)?2:"de".equals(lang)?3:"pl".equals(lang)?4:5;
+        for(String[] phrase:terms)if(phrase[0].equals(key))return phrase[index];
+        return key;
+    }
+    private static String translateCondition(String lang,String value){
+        if(value.equals("Ясно"))return tr(lang,"clear");
+        if(value.equals("Переменная облачность"))return tr(lang,"partly");
+        if(value.equals("Облачно"))return tr(lang,"cloudy");
+        if(value.equals("Снег"))return tr(lang,"snow");
+        if(value.equals("Дождь"))return tr(lang,"rain");
+        if(value.equals("Туман"))return tr(lang,"fog");
+        return value;
+    }
     private static void render(Context c,AppWidgetManager manager,int id){
         SharedPreferences p=c.getSharedPreferences("MainActivity",Context.MODE_PRIVATE);
         JSONObject cfg;
         try{cfg=new JSONObject(p.getString("config","{}"));}catch(Exception e){cfg=new JSONObject();}
         RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.weather_widget);
-        String city=p.getString("city",cfg.optString("city","Берлин"));
+        String lang=locale(c,cfg);
+        String city=p.getString("city",cfg.optString("city",tr(lang,"berlin")));
         String temp=p.getString("temp","—°");
-        String summary=p.getString("summary","Прогноз загружается");
+        String summary=translateCondition(lang,p.getString("summary",tr(lang,"loading")));
         v.setTextViewText(R.id.widget_city,city);
         v.setTextViewText(R.id.widget_temp,temp);
         v.setTextViewText(R.id.widget_summary,summary);
@@ -101,33 +148,33 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                 if(item==null||!item.optBoolean("enabled",true))continue;
                 String kind=item.optString("id","");
                 if("hero".equals(kind))continue;
-                append(c,v,kind,temp,summary,icons(cfg.optJSONArray("family")),p,id*100+i,count);
+                append(c,v,kind,temp,summary,icons(cfg.optJSONArray("family")),p,id*100+i,count,lang);
                 count++;
             }
         }else{
             for(String kind:new String[]{"hourly","daily","details"}){
-                append(c,v,kind,temp,summary,icons(cfg.optJSONArray("family")),p,id*100+count,count);
+                append(c,v,kind,temp,summary,icons(cfg.optJSONArray("family")),p,id*100+count,count,lang);
                 count++;
             }
         }
         if(count==0 && !heroEnabled){
-            append(c,v,"hint",temp,summary,"",p,id*100,0);
+            append(c,v,"hint",temp,summary,"",p,id*100,0,lang);
         }
         manager.updateAppWidget(id,v);
     }
 
-    private static void append(Context c,RemoteViews container,String id,String temp,String description,String people,SharedPreferences p,int requestCode,int index){
+    private static void append(Context c,RemoteViews container,String id,String temp,String description,String people,SharedPreferences p,int requestCode,int index,String lang){
         String title,icon,value;
         switch(id){
-            case "hourly":title="Почасовой прогноз";icon="◷";value="Нажмите, чтобы открыть часы";break;
-            case "daily":title="Прогноз на 7 дней";icon="▦";value="Температура и осадки по дням";break;
-            case "details":title="Подробные показатели";icon="◉";value=p.getString("humidity","")+
-                (p.getString("humidity","").isEmpty()?"Ветер · влажность · давление":" влажность");break;
-            case "clothes":title="Что надеть";icon="♧";value="Рекомендации для прогулки";break;
-            case "family":title="Вся семья";icon="♧";value=people;break;
-            case "warnings":title="Предупреждения";icon="⚠";value="Прогноз изменений погоды";break;
-            case "radar":title="Карта осадков";icon="◈";value="Здесь будет радар";break;
-            default:title="Настройте модули";icon="✎";value="Откройте редактор";break;
+            case "hourly":title=tr(lang,"hourly");icon="◷";value=tr(lang,"openHours");break;
+            case "daily":title=tr(lang,"daily");icon="▦";value=tr(lang,"dailyText");break;
+            case "details":title=tr(lang,"details");icon="◉";value=p.getString("humidity","")+
+                (p.getString("humidity","").isEmpty()?tr(lang,"windText"):tr(lang,"humidityText"));break;
+            case "clothes":title=tr(lang,"clothes");icon="♧";value=tr(lang,"walk");break;
+            case "family":title=tr(lang,"family");icon="♧";value=people;break;
+            case "warnings":title=tr(lang,"warnings");icon="⚠";value=tr(lang,"changes");break;
+            case "radar":title=tr(lang,"radar");icon="◈";value=tr(lang,"radarPlaceholder");break;
+            default:title=tr(lang,"hint");icon="✎";value=tr(lang,"openEditor");break;
         }
         RemoteViews row=new RemoteViews(c.getPackageName(),R.layout.widget_module);
         row.setTextViewText(R.id.widget_module_icon,icon);
