@@ -55,6 +55,11 @@ public class MainActivity extends Activity {
                 if (target != null && (target.equals("editor") || target.equals("settings"))) {
                     view.evaluateJavascript("window.weatherGoTo && window.weatherGoTo('"+target+"')", null);
                 }
+                String testLang = getIntent().getStringExtra("localeTest");
+                if (testLang != null && testLang.matches("ru|en|de|pl|be")) {
+                    getIntent().removeExtra("localeTest");
+                    view.evaluateJavascript("window.WWYLocale && window.WWYLocale.set('"+testLang+"')", null);
+                }
             }
             @Override public android.webkit.WebResourceResponse shouldInterceptRequest(
                 WebView view, android.webkit.WebResourceRequest request) {
@@ -101,7 +106,10 @@ public class MainActivity extends Activity {
                 .putString("summary",summary).apply();
             ui.post(()->WeatherWidgetProvider.updateAll(MainActivity.this));
         }
-        @JavascriptInterface public String version() { return "1.0.0-alpha1"; }
+        @JavascriptInterface public String version() { return "1.1.0-test"; }
+        @JavascriptInterface public String systemLanguage() {
+            return java.util.Locale.getDefault().toLanguageTag();
+        }
         @JavascriptInterface public void openUpdates() { ui.post(()->checkForUpdates()); }
         @JavascriptInterface public void openUrl(String url) {
             if (!url.startsWith("https://")) return;
@@ -123,10 +131,10 @@ public class MainActivity extends Activity {
                 JSONObject manifest=new JSONObject(b.toString());
                 int next=manifest.optInt("versionCode", 0);
                 String url=manifest.optString("apkUrl","");
-                if (next>1 && url.startsWith("https://")) {
+                if (next>2 && url.startsWith("https://")) {
                     message="Доступна версия "+manifest.optString("versionName");
                     downloadUrl=url;
-                } else message="Установлена актуальная версия 1.0.0-alpha1";
+                } else message="Установлена актуальная версия 1.1.0-test";
             } catch(Exception e) {message="Не удалось проверить обновления. Попробуйте позже.";}
             final String m=message, u=downloadUrl;
             ui.post(()->{
