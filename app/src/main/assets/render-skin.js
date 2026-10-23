@@ -3,14 +3,14 @@
 'use strict';
 const KEY='weatherwithyou.visualSkin';
 const files={hero:'hero',hourly:'hourly',daily:'daily',radar:'radar',details:'details',clothes:'clothes',family:'family',warnings:'warnings'};
-let skin=localStorage.getItem(KEY)!=='data';
+let skin=localStorage.getItem(KEY)==='render' && (window.WWYLocale?.language()||'ru')==='ru';
 function ensureSwitcher(){
   const bar=document.querySelector('.topbar');
   if(!bar || document.querySelector('#renderSwitch'))return;
   const btn=document.createElement('button');
   btn.id='renderSwitch';btn.className='render-switch';btn.type='button';
   bar.insertBefore(btn,bar.querySelector('#editorBtn'));
-  btn.addEventListener('click',()=>{skin=!skin;localStorage.setItem(KEY,skin?'render':'data');paint()});
+  btn.addEventListener('click',()=>{if((window.WWYLocale?.language()||'ru')!=='ru')return;skin=!skin;localStorage.setItem(KEY,skin?'render':'data');paint()});
 }
 function designLabel(){
   const home=document.querySelector('#home');
