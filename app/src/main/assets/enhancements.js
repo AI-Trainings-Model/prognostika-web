@@ -18,12 +18,14 @@
     document.querySelectorAll('.module[data-module="details"]').forEach(module=>{
       module.querySelectorAll('.detail').forEach(el=>{
         let label=el.querySelector('.dlabel')?.textContent?.trim();
+        label=window.WWYLocale?.toSource(label)||label;
         el.dataset.wwyHidden=options.details.includes(label)?'false':'true';
       })
     });
     document.querySelectorAll('.module.hero').forEach(module=>{
       module.querySelectorAll('.hero-pill').forEach(el=>{
-        const label=el.lastElementChild?.textContent?.trim()||'';
+        let label=el.lastElementChild?.textContent?.trim()||'';
+        label=window.WWYLocale?.toSource(label)||label;
         el.dataset.wwyHidden=options.heroInfo.includes(label)?'false':'true';
       });
       let existing=module.querySelector('.hero-family-indicator');
@@ -58,7 +60,7 @@
   function attachOptions(){
     const body=document.getElementById('sheetBody');
     const title=document.getElementById('sheetTitle')?.textContent?.trim();
-    const key=MODULE_NAME[title];
+    const key=MODULE_NAME[window.WWYLocale?.toSource(title)||title];
     if(!key || !body || body.querySelector('.module-extras'))return;
     editing=key;
     const extra=document.createElement('div');extra.className='module-extras';
