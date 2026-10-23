@@ -53,7 +53,7 @@ function paint(){
         const actions=document.createElement('div');actions.className='render-actions';
         if(container===root){
           const refresh=document.createElement('button');refresh.type='button';refresh.className='render-action render-refresh';refresh.title='Обновить модуль';refresh.textContent='↻';refresh.addEventListener('click',e=>{e.stopPropagation();skin=false;localStorage.setItem(KEY,'data');paint();el.querySelector('[data-refresh]')?.click()});actions.appendChild(refresh);
-          const summary=liveSummary(el);if(summary){const line=document.createElement('div');line.className='render-live-line';line.textContent=summary;actions.appendChild(line)}
+          /* Render mode preserves screenshot pixels; live values remain in Data mode. */
         }
         el.appendChild(actions);
       });
